@@ -1,0 +1,99 @@
+<!DOCTYPE html><html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f2f2f2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+        }
+        #chat-box {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            max-height: 400px;
+            margin-bottom: 20px;
+        }
+        .message {
+            margin-bottom: 10px;
+        }
+        .user {
+            font-weight: bold;
+            color: blue;
+        }
+        .bot {
+            color: black;
+        }
+        #controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            max-width: 600px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Knowledge Bot(Free Version)</h2>
+    <div id="chat-box"></div>
+    <form id="chat-form" enctype="multipart/form-data">
+        <div id="controls">
+            <textarea name="message" id="message" rows="3" placeholder="Type your question..." style="width: 100%;"></textarea>
+            <input type="file" name="image" id="image">
+            <button type="submit">Send</button>
+        </div>
+    </form><script>
+    const chatForm = document.getElementById("chat-form");
+    const chatBox = document.getElementById("chat-box");
+
+    function appendMessage(role, text) {
+        const msgDiv = document.createElement("div");
+        msgDiv.classList.add("message");
+        msgDiv.innerHTML = `<span class="${role}">${role === 'user' ? 'You' : 'Bot'}:</span> ${text}`;
+        chatBox.appendChild(msgDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    chatForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(chatForm);
+        const message = formData.get("message");
+        const image = formData.get("image");
+
+        if (!message && (!image || image.size === 0)) {
+            alert("Please enter a message or upload an image.");
+            return;
+        }
+
+        if (message) appendMessage("user", message);
+        if (image && image.name) appendMessage("user", `[Image uploaded: ${image.name}]`);
+
+        try {
+            const response = await fetch("/chat", {
+                method: "POST",
+                body: formData
+            });
+            const data = await response.json();
+            appendMessage("bot", data.response);
+        } catch (err) {
+            appendMessage("bot", "An error occurred while processing your request.");
+            console.error(err);
+        }
+
+        chatForm.reset();
+    });
+</script>
+
+</body>
+</html>
